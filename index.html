@@ -1,0 +1,247 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#171717">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="萌喵社">
+  <title>萌喵社 · 一番赏管理</title>
+  <link rel="manifest" href="./manifest.json">
+  <link rel="apple-touch-icon" href="./icons/icon-192.png">
+  <style>
+    :root{
+      color-scheme: light dark;
+      --bg:#f6f5f1;--card:#fff;--text:#181818;--muted:#777;--line:#e6e3dc;
+      --soft:#f1efe9;--accent:#171717;--accentText:#fff;--good:#e4f4e4;--warn:#fff1c9;
+    }
+    @media(prefers-color-scheme:dark){
+      :root{--bg:#121212;--card:#1c1c1c;--text:#f4f4f4;--muted:#aaa;--line:#303030;--soft:#252525;--accent:#f1f1f1;--accentText:#171717;--good:#233623;--warn:#443919}
+    }
+    *{box-sizing:border-box}
+    body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;background:var(--bg);color:var(--text)}
+    main{max-width:980px;margin:auto;padding:16px 14px 50px}
+    h1{margin:0;font-size:24px}.sub,.meta{font-size:12px;color:var(--muted)}
+    .stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:9px;margin:16px 0}
+    .stat,.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:14px}
+    .stat b{display:block;font-size:19px;margin-top:4px}
+    .tabs{display:flex;gap:7px;overflow:auto;padding-bottom:7px;margin-bottom:12px}
+    button{font:inherit}.tabs button,.btn{min-height:44px;border-radius:11px;border:0;padding:10px 14px;font-weight:750;cursor:pointer}
+    .tabs button{white-space:nowrap;border-radius:999px;background:var(--soft);color:var(--text)}
+    .tabs button.active,.btn.primary{background:var(--accent);color:var(--accentText)}
+    .btn.secondary{background:transparent;color:var(--text);border:1px solid var(--line)}
+    .btn.danger{background:#f9e4e2;color:#9d2921}
+    .panel{display:none}.panel.active{display:block}
+    .grid2{display:grid;grid-template-columns:minmax(260px,.85fr) minmax(0,1.15fr);gap:13px;align-items:start}
+    .card{margin-bottom:13px} h2{font-size:16px;margin:0 0 12px}
+    label{display:block;font-size:12px;font-weight:700;margin:9px 0 5px;color:var(--muted)}
+    input,select{width:100%;min-height:44px;border:1px solid var(--line);border-radius:11px;padding:9px 11px;background:var(--card);color:var(--text);font-size:16px}
+    .inline{display:grid;grid-template-columns:1fr 1fr;gap:8px}.btnrow{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+    .list{display:flex;flex-direction:column;gap:8px}.row{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:11px;border-radius:12px;background:var(--soft)}
+    .main{flex:1;min-width:0}.name{font-weight:750;overflow-wrap:anywhere}.money{font-weight:850;white-space:nowrap}
+    .empty{text-align:center;color:var(--muted);padding:22px 8px;font-size:13px}
+    .setcard{border:1px solid var(--line);border-radius:15px;padding:12px;margin-bottom:10px}.sethead{display:flex;justify-content:space-between;gap:10px;align-items:flex-start}.settitle{font-size:15px;font-weight:850}
+    .tag{display:inline-flex;padding:4px 8px;border-radius:999px;background:var(--soft);font-size:11px;margin:4px 4px 0 0}.tag.on{background:var(--good)}.tag.warn{background:var(--warn)}
+    .progress{height:9px;background:var(--soft);border-radius:999px;overflow:hidden;margin:9px 0}.progress i{display:block;height:100%;background:var(--accent)}
+    .prizegrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px;margin-top:10px}.prize{border-radius:11px;padding:9px;background:var(--soft)}.prize strong{font-size:13px;display:block}.prize span{font-size:11px;color:var(--muted)}
+    .last{padding:9px 11px;border-radius:11px;background:var(--warn);font-size:12px;margin-top:9px}
+    .lottery{padding:22px 14px;text-align:center;border-radius:16px;background:var(--soft);margin:10px 0}.result{font-size:25px;font-weight:900;margin:7px 0;overflow-wrap:anywhere}
+    .notice{display:none;padding:9px 11px;border-radius:10px;background:var(--good);font-size:13px;margin-bottom:10px}.notice.show{display:block}
+    .tools{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+    @media(max-width:700px){.stats{grid-template-columns:1fr 1fr}.grid2,.inline,.tools{grid-template-columns:1fr}.prizegrid{grid-template-columns:1fr}}
+  </style>
+</head>
+<body>
+<main>
+  <h1>萌喵社 · 管理台</h1>
+  <div class="sub">会员充值 · 商品套 · LASTあり/なし · 抽赏状态 · 本地永久保存</div>
+
+  <div class="stats">
+    <div class="stat"><span class="meta">会员</span><b id="sCust">0</b></div>
+    <div class="stat"><span class="meta">余额合计</span><b id="sBal">¥0</b></div>
+    <div class="stat"><span class="meta">商品套</span><b id="sSets">0</b></div>
+    <div class="stat"><span class="meta">剩余签数</span><b id="sTickets">0</b></div>
+  </div>
+
+  <div class="tabs">
+    <button class="active" data-tab="member">👤 会员</button>
+    <button data-tab="sets">🎴 商品套</button>
+    <button data-tab="sale">🛍️ 销售</button>
+    <button data-tab="draw">🎟️ 抽赏</button>
+    <button data-tab="owned">🎁 客人物品</button>
+    <button data-tab="history">🧾 流水</button>
+    <button data-tab="backup">💾 备份</button>
+  </div>
+
+  <div id="notice" class="notice" aria-live="polite"></div>
+
+  <section id="panel-member" class="panel active">
+    <div class="grid2">
+      <div>
+        <div class="card">
+          <h2>新增会员</h2>
+          <form id="memberForm">
+            <label>姓名 / 昵称</label><input id="mName" maxlength="30" required>
+            <label>备注</label><input id="mNote" maxlength="60">
+            <button class="btn primary" style="width:100%;margin-top:12px">添加会员</button>
+          </form>
+        </div>
+        <div class="card">
+          <h2>充值 / 扣款</h2>
+          <label>会员</label><select id="balMember"></select>
+          <label>金额</label><input id="balAmount" type="number" min="0.01" step="0.01">
+          <div class="btnrow"><button id="recharge" class="btn primary" type="button">充值</button><button id="deduct" class="btn secondary" type="button">扣款</button></div>
+        </div>
+      </div>
+      <div class="card"><h2>会员列表</h2><div id="memberList" class="list"></div></div>
+    </div>
+  </section>
+
+  <section id="panel-sets" class="panel">
+    <div class="grid2">
+      <div>
+        <div class="card">
+          <h2>建立一套赏</h2>
+          <form id="setForm">
+            <label>套名</label><input id="setName" required placeholder="例如：咒术回战 一番赏 第1弹">
+            <label>每抽售价</label><input id="setDrawPrice" type="number" min="0" step="0.01" value="0">
+            <label>Last赏</label><select id="hasLast"><option value="yes">LASTあり</option><option value="no">LASTなし</option></select>
+            <div id="lastWrap"><label>Last赏名称</label><input id="lastPrize" placeholder="例如：Last One 五条悟 Figure"></div>
+            <label>初始状态</label><select id="setStatus"><option value="idle">💤 未开抽</option><option value="active">🟢 抽赏中</option></select>
+            <button class="btn primary" style="width:100%;margin-top:12px">建立商品套</button>
+          </form>
+        </div>
+        <div class="card">
+          <h2>添加赏品</h2>
+          <form id="prizeForm">
+            <label>商品套</label><select id="prizeSet"></select>
+            <div class="inline"><div><label>赏级</label><input id="prizeRank" required placeholder="A赏"></div><div><label>数量</label><input id="prizeCount" type="number" min="1" value="1" required></div></div>
+            <label>奖品名称</label><input id="prizeName" required placeholder="五条悟 Figure">
+            <button class="btn primary" style="width:100%;margin-top:12px">加入这套</button>
+          </form>
+        </div>
+      </div>
+      <div class="card"><h2>商品套详情</h2><div id="setList"></div></div>
+    </div>
+  </section>
+
+  <section id="panel-sale" class="panel">
+    <div class="grid2">
+      <div class="card">
+        <h2>销售奖品</h2>
+        <form id="saleForm">
+          <label>会员</label><select id="saleMember"></select>
+          <label>商品套</label><select id="saleSet"></select>
+          <label>奖品</label><select id="salePrize"></select>
+          <div class="inline"><div><label>数量</label><input id="saleQty" type="number" min="1" value="1"></div><div><label>实收金额</label><input id="saleAmount" type="number" min="0" step="0.01" value="0"></div></div>
+          <label>付款方式</label><select id="salePay"><option>会员余额</option><option>微信</option><option>支付宝</option><option>现金</option><option>其他</option></select>
+          <button class="btn primary" style="width:100%;margin-top:12px">确认销售</button>
+        </form>
+      </div>
+      <div class="card"><h2>说明</h2><div class="meta">直接销售某个赏品会同步减少该套对应赏的剩余数量，并计入该会员名下。</div></div>
+    </div>
+  </section>
+
+  <section id="panel-draw" class="panel">
+    <div class="grid2">
+      <div class="card">
+        <h2>一番赏抽奖</h2>
+        <label>会员</label><select id="drawMember"></select>
+        <label>选择商品套</label><select id="drawSet"></select>
+        <div id="drawStatus"></div>
+        <label>抽奖次数</label><input id="drawTimes" type="number" min="1" max="50" value="1">
+        <label>付款方式</label><select id="drawPay"><option>会员余额</option><option>微信</option><option>支付宝</option><option>现金</option><option>其他</option></select>
+        <button id="drawBtn" class="btn primary" style="width:100%;margin-top:12px" type="button">随机抽取</button>
+      </div>
+      <div class="card"><h2>本轮开奖结果</h2><div class="lottery"><div class="meta">最新一抽</div><div id="latestResult" class="result">等待抽奖</div></div><div id="drawResults" class="list"></div></div>
+    </div>
+  </section>
+
+  <section id="panel-owned" class="panel">
+    <div class="card"><h2>查看客人获得的商品</h2><label>会员</label><select id="ownedMember"></select><div id="ownedList" style="margin-top:12px"></div></div>
+  </section>
+
+  <section id="panel-history" class="panel">
+    <div class="card"><h2>流水记录</h2><div id="historyList" class="list"></div></div>
+  </section>
+
+  <section id="panel-backup" class="panel">
+    <div class="card">
+      <h2>数据备份</h2>
+      <div class="meta">数据默认保存在当前手机浏览器里。建议定期导出 JSON 备份，换手机或清除浏览器数据时可以恢复。</div>
+      <div class="tools" style="margin-top:12px">
+        <button id="exportBtn" class="btn primary" type="button">导出备份</button>
+        <label class="btn secondary" style="display:flex;align-items:center;justify-content:center;cursor:pointer">导入备份<input id="importFile" type="file" accept="application/json" hidden></label>
+      </div>
+      <button id="clearBtn" class="btn danger" style="width:100%;margin-top:10px" type="button">清空全部数据</button>
+    </div>
+  </section>
+</main>
+
+<script>
+const STORAGE_KEY='moemiao_pwa_v1';
+let state={members:[],sets:[],prizes:[],logs:[],nextId:1};
+let round=[];
+const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
+const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const money=n=>'¥'+Number(n||0).toLocaleString('zh-CN',{maximumFractionDigits:2});
+const now=()=>new Date().toLocaleString('zh-CN',{hour12:false});
+
+function save(){localStorage.setItem(STORAGE_KEY,JSON.stringify(state))}
+function load(){try{const raw=localStorage.getItem(STORAGE_KEY);if(raw){const parsed=JSON.parse(raw);if(parsed&&Array.isArray(parsed.members))state=parsed}}catch(e){}}
+function toast(t){const n=$('#notice');n.textContent=t;n.classList.add('show');setTimeout(()=>n.classList.remove('show'),2200)}
+function log(type,text){state.logs.unshift({type,text,time:now()});save()}
+function options(el,arr,placeholder,label=x=>x.name){const old=el.value;el.innerHTML='<option value="">'+placeholder+'</option>'+arr.map(x=>'<option value="'+x.id+'">'+esc(label(x))+'</option>').join('');if(arr.some(x=>String(x.id)===old))el.value=old}
+function setTotal(sid){return state.prizes.filter(p=>p.setId===sid).reduce((a,p)=>a+p.total,0)}
+function setRemain(sid){return state.prizes.filter(p=>p.setId===sid).reduce((a,p)=>a+p.remain,0)}
+function syncDone(s){if(setTotal(s.id)>0&&setRemain(s.id)===0)s.status='done'}
+function statusText(s){syncDone(s);return s.status==='active'?'🟢 抽赏中':s.status==='done'?'✅ 已抽完':'💤 未开抽'}
+
+function render(){
+  state.sets.forEach(syncDone);
+  $('#sCust').textContent=state.members.length;
+  $('#sBal').textContent=money(state.members.reduce((a,m)=>a+m.balance,0));
+  $('#sSets').textContent=state.sets.length;
+  $('#sTickets').textContent=state.prizes.reduce((a,p)=>a+p.remain,0);
+
+  ['#balMember','#saleMember','#drawMember','#ownedMember'].forEach(s=>options($(s),state.members,'请选择会员'));
+  ['#prizeSet','#saleSet'].forEach(s=>options($(s),state.sets,'请选择商品套'));
+  options($('#drawSet'),state.sets.filter(s=>s.status==='active'&&setRemain(s.id)>0),'请选择抽赏中的商品套');
+
+  $('#memberList').innerHTML=state.members.length?state.members.map(m=>'<div class="row"><div class="main"><div class="name">'+esc(m.name)+'</div><div class="meta">'+esc(m.note||'无备注')+'</div></div><div class="money">'+money(m.balance)+'</div></div>').join(''):'<div class="empty">暂无会员</div>';
+
+  $('#setList').innerHTML=state.sets.length?state.sets.map(s=>{const ps=state.prizes.filter(p=>p.setId===s.id),tot=setTotal(s.id),rem=setRemain(s.id),pct=tot?Math.round((tot-rem)/tot*100):0;return '<div class="setcard"><div class="sethead"><div><div class="settitle">'+esc(s.name)+'</div><span class="tag on">'+statusText(s)+'</span><span class="tag">'+(s.hasLast?'LASTあり':'LASTなし')+'</span><div class="meta" style="margin-top:5px">每抽 '+money(s.drawPrice)+' · 剩余 '+rem+' / '+tot+' 签</div></div><select class="statusSelect" data-id="'+s.id+'" style="width:auto"><option value="idle"'+(s.status==='idle'?' selected':'')+'>💤 未开抽</option><option value="active"'+(s.status==='active'?' selected':'')+'>🟢 抽赏中</option><option value="done"'+(s.status==='done'?' selected':'')+'>✅ 已抽完</option></select></div><div class="progress"><i style="width:'+pct+'%"></i></div><div class="prizegrid">'+(ps.length?ps.map(p=>'<div class="prize"><strong>'+esc(p.rank)+' · '+esc(p.name)+'</strong><span>剩余 '+p.remain+' / '+p.total+'</span></div>').join(''):'<div class="meta">还没有赏品</div>')+'</div>'+(s.hasLast?'<div class="last">🏆 Last赏：'+esc(s.lastPrize)+(s.lastAwarded?'（已送出）':'（最后一签自动获得）')+'</div>':'')+'</div>'}).join(''):'<div class="empty">请先建立商品套</div>';
+
+  $$('.statusSelect').forEach(el=>el.addEventListener('change',()=>{const s=state.sets.find(x=>x.id===+el.dataset.id);if(!s)return;if(el.value==='done'&&setRemain(s.id)>0){toast('还有剩余签，不能设为已抽完');render();return}s.status=el.value;log('状态','「'+s.name+'」→ '+statusText(s));save();render()}));
+
+  renderSalePrize(); renderDrawStatus(); renderOwned(); renderLogs(); renderRound(); save();
+}
+
+function renderSalePrize(){const sid=+$('#saleSet').value;options($('#salePrize'),state.prizes.filter(p=>p.setId===sid&&p.remain>0),'请选择奖品',p=>p.rank+' · '+p.name+'（剩'+p.remain+'）')}
+function renderDrawStatus(){const sid=+$('#drawSet').value,s=state.sets.find(x=>x.id===sid);if(!s){$('#drawStatus').innerHTML='<div class="empty">请选择抽赏中的商品套</div>';return}const total=setTotal(sid),rem=setRemain(sid),pct=total?Math.round((total-rem)/total*100):0;$('#drawStatus').innerHTML='<div class="setcard" style="margin-top:10px"><div class="settitle">'+esc(s.name)+'</div><div class="meta">'+statusText(s)+' · '+(s.hasLast?'LASTあり':'LASTなし')+'</div><div class="progress"><i style="width:'+pct+'%"></i></div><div class="name">剩余 '+rem+' / '+total+' 签 · 每抽 '+money(s.drawPrice)+'</div></div>'}
+function addOwned(m,s,p,qty,kind='normal'){m.owned=m.owned||{};const key=kind==='last'?'last-'+s.id:String(p.id);if(m.owned[key])m.owned[key].qty+=qty;else m.owned[key]={setName:s.name,rank:kind==='last'?'Last赏':p.rank,name:kind==='last'?s.lastPrize:p.name,qty}}
+function renderOwned(){const m=state.members.find(x=>x.id===+$('#ownedMember').value);if(!m){$('#ownedList').innerHTML='<div class="empty">请选择会员</div>';return}const arr=Object.values(m.owned||{});if(!arr.length){$('#ownedList').innerHTML='<div class="empty">暂无商品</div>';return}const g={};arr.forEach(o=>(g[o.setName]??=[]).push(o));$('#ownedList').innerHTML=Object.entries(g).map(([sn,a])=>'<div class="setcard"><div class="settitle">'+esc(sn)+'</div><div class="list" style="margin-top:8px">'+a.map(o=>'<div class="row"><div class="name">'+esc(o.rank)+' · '+esc(o.name)+'</div><div class="money">× '+o.qty+'</div></div>').join('')+'</div></div>').join('')}
+function renderLogs(){$('#historyList').innerHTML=state.logs.length?state.logs.map(l=>'<div class="row"><div><div class="name">'+esc(l.text)+'</div><div class="meta">'+esc(l.type)+' · '+esc(l.time)+'</div></div></div>').join(''):'<div class="empty">暂无记录</div>'}
+function renderRound(){$('#drawResults').innerHTML=round.length?round.map((r,i)=>'<div class="row"><div><div class="name">第 '+(i+1)+' 项 · '+esc(r.rank)+' · '+esc(r.name)+'</div><div class="meta">'+esc(r.setName)+' · '+esc(r.member)+'</div></div></div>').join(''):'<div class="empty">本轮还没有抽奖</div>'}
+
+$$('.tabs button').forEach(b=>b.addEventListener('click',()=>{$$('.tabs button').forEach(x=>x.classList.remove('active'));$$('.panel').forEach(x=>x.classList.remove('active'));b.classList.add('active');$('#panel-'+b.dataset.tab).classList.add('active')}));
+$('#hasLast').addEventListener('change',()=>$('#lastWrap').style.display=$('#hasLast').value==='yes'?'block':'none');
+$('#memberForm').addEventListener('submit',e=>{e.preventDefault();const name=$('#mName').value.trim();if(!name)return;state.members.push({id:state.nextId++,name,note:$('#mNote').value.trim(),balance:0,owned:{}});log('会员','新增会员：'+name);e.target.reset();render();toast('会员已添加')});
+function balance(dir){const m=state.members.find(x=>x.id===+$('#balMember').value),a=Number($('#balAmount').value);if(!m||!Number.isFinite(a)||a<=0)return toast('请选择会员并输入金额');if(dir<0&&m.balance<a)return toast('余额不足');m.balance+=dir*a;log('余额',(dir>0?'充值：':'扣款：')+m.name+' '+money(a));$('#balAmount').value='';render();toast(dir>0?'充值成功':'扣款成功')}
+$('#recharge').addEventListener('click',()=>balance(1));$('#deduct').addEventListener('click',()=>balance(-1));
+$('#setForm').addEventListener('submit',e=>{e.preventDefault();const name=$('#setName').value.trim(),price=Math.max(0,Number($('#setDrawPrice').value)||0),hasLast=$('#hasLast').value==='yes',last=$('#lastPrize').value.trim(),status=$('#setStatus').value;if(!name)return;if(hasLast&&!last)return toast('请填写 Last赏名称');state.sets.push({id:state.nextId++,name,drawPrice:price,hasLast,lastPrize:hasLast?last:'',lastAwarded:false,status});log('商品套','建立：'+name+' · '+(hasLast?'LASTあり':'LASTなし'));e.target.reset();$('#setDrawPrice').value=0;$('#hasLast').value='yes';$('#lastWrap').style.display='block';render();toast('商品套已建立')});
+$('#prizeForm').addEventListener('submit',e=>{e.preventDefault();const sid=+$('#prizeSet').value,rank=$('#prizeRank').value.trim(),name=$('#prizeName').value.trim(),count=Math.floor(Number($('#prizeCount').value));if(!sid||!rank||!name||count<1)return toast('请完整填写赏信息');state.prizes.push({id:state.nextId++,setId:sid,rank,name,total:count,remain:count});log('赏品','加入：'+rank+' '+name+' × '+count);e.target.reset();$('#prizeCount').value=1;render();toast('赏品已加入')});
+$('#saleSet').addEventListener('change',renderSalePrize);$('#drawSet').addEventListener('change',renderDrawStatus);$('#ownedMember').addEventListener('change',renderOwned);
+$('#saleForm').addEventListener('submit',e=>{e.preventDefault();const m=state.members.find(x=>x.id===+$('#saleMember').value),s=state.sets.find(x=>x.id===+$('#saleSet').value),p=state.prizes.find(x=>x.id===+$('#salePrize').value),q=Math.max(1,Math.floor(Number($('#saleQty').value)||1)),amt=Math.max(0,Number($('#saleAmount').value)||0),pay=$('#salePay').value;if(!m||!s||!p)return toast('请选择会员和奖品');if(p.remain<q)return toast('库存不足');if(pay==='会员余额'&&m.balance<amt)return toast('会员余额不足');p.remain-=q;if(pay==='会员余额')m.balance-=amt;addOwned(m,s,p,q);log('销售',m.name+' 购买 '+p.rank+' '+p.name+' × '+q);render();toast('销售已记录')});
+$('#drawBtn').addEventListener('click',()=>{const m=state.members.find(x=>x.id===+$('#drawMember').value),s=state.sets.find(x=>x.id===+$('#drawSet').value),times=Math.max(1,Math.min(50,Math.floor(Number($('#drawTimes').value)||1))),pay=$('#drawPay').value;if(!m||!s)return toast('请选择会员和商品套');const rem=setRemain(s.id);if(rem<times)return toast('这套只剩 '+rem+' 签');const totalPrice=s.drawPrice*times;if(pay==='会员余额'&&m.balance<totalPrice)return toast('会员余额不足');if(pay==='会员余额')m.balance-=totalPrice;round=[];for(let n=0;n<times;n++){const pool=[];state.prizes.filter(p=>p.setId===s.id&&p.remain>0).forEach(p=>{for(let i=0;i<p.remain;i++)pool.push(p)});const p=pool[Math.floor(Math.random()*pool.length)];p.remain--;addOwned(m,s,p,1);round.push({rank:p.rank,name:p.name,setName:s.name,member:m.name});log('抽赏',m.name+' 在「'+s.name+'」抽中 '+p.rank+' '+p.name);if(setRemain(s.id)===0){s.status='done';if(s.hasLast&&!s.lastAwarded){s.lastAwarded=true;addOwned(m,s,null,1,'last');round.push({rank:'Last赏',name:s.lastPrize,setName:s.name,member:m.name});log('Last赏',m.name+' 获得「'+s.name+'」Last赏：'+s.lastPrize)}}}$('#latestResult').textContent=round.length?round[round.length-1].rank+' '+round[round.length-1].name:'等待抽奖';render();toast('抽奖完成')});
+
+$('#exportBtn').addEventListener('click',()=>{const blob=new Blob([JSON.stringify(state,null,2)],{type:'application/json'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='萌喵社备份-'+new Date().toISOString().slice(0,10)+'.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000)});
+$('#importFile').addEventListener('change',async e=>{const f=e.target.files[0];if(!f)return;try{const parsed=JSON.parse(await f.text());if(!parsed||!Array.isArray(parsed.members)||!Array.isArray(parsed.sets)||!Array.isArray(parsed.prizes))throw new Error();if(confirm('导入会覆盖当前全部数据，继续吗？')){state=parsed;save();render();toast('备份已恢复')}}catch(err){toast('备份文件无效')}e.target.value=''});
+$('#clearBtn').addEventListener('click',()=>{if(confirm('确认清空全部会员、商品、余额和流水吗？此操作不可撤销。')){state={members:[],sets:[],prizes:[],logs:[],nextId:1};round=[];save();render();toast('全部数据已清空')}});
+
+load();render();
+if('serviceWorker' in navigator){window.addEventListener('load',()=>navigator.serviceWorker.register('./service-worker.js').catch(()=>{}))}
+</script>
+</body>
+</html>
